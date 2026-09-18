@@ -26,12 +26,12 @@ st.markdown("Ask questions about the **Prevention of Electronic Crimes Act (PECA
 # Sidebar Controls
 st.sidebar.header("⚙️ Configuration & Model Settings")
 
-# Grok API Key
-grok_api_key = st.sidebar.text_input(
-    "xAI / Grok API Key",
+# Groq API Key (Free)
+groq_api_key = st.sidebar.text_input(
+    "Groq API Key (100% Free)",
     type="password",
-    value=os.getenv("XAI_API_KEY", ""),
-    help="Enter your xAI Grok API key (starts with xai-)."
+    value=os.getenv("GROQ_API_KEY", ""),
+    help="Get a free key from https://console.groq.com (starts with gsk_)"
 )
 
 st.sidebar.markdown("---")
@@ -41,16 +41,14 @@ st.sidebar.subheader("🎛️ Customize Responses")
 tech_level = st.sidebar.select_slider(
     "Technical / Legal Level",
     options=["Layman / Simple", "General Public", "Legal Student", "Lawyer / Expert"],
-    value="General Public",
-    help="Controls the technical complexity of the language."
+    value="General Public"
 )
 
 # Response Length Option
 response_size = st.sidebar.select_slider(
     "Response Size",
     options=["Brief (1-2 Paras)", "Standard Summary", "Detailed Breakdown", "Exhaustive Analysis"],
-    value="Standard Summary",
-    help="Controls how concise or detailed the output is."
+    value="Standard Summary"
 )
 
 # Persona / Tone Option
@@ -62,21 +60,11 @@ persona = st.sidebar.selectbox(
         "Public Prosecutor Viewpoint",
         "Compliance Officer / Enterprise"
     ],
-    index=0,
-    help="Frame the answer from a specific legal angle."
+    index=0
 )
 
 # Creativity Option
-temperature = st.sidebar.slider(
-    "Temperature",
-    min_value=0.0,
-    max_value=1.0,
-    value=0.2,
-    step=0.1,
-    help="Lower values produce more direct, predictable answers."
-)
-
-# Retrieval Chunk Count
+temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.2, step=0.1)
 top_k = st.sidebar.slider("Retrieved Chunks (k)", min_value=2, max_value=10, value=4)
 
 # Download PDF function
@@ -109,7 +97,6 @@ def init_vector_store():
     vector_store = FAISS.from_documents(splits, embeddings)
     return vector_store
 
-# Initialize App Vector Store
 try:
     vector_store = init_vector_store()
     st.sidebar.success("✅ FAISS Vector Index Loaded")
@@ -136,7 +123,6 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}")
 ])
 
-# Interface Controls
 st.subheader("💬 Ask CyberlawsGPT")
 
 preset_query = st.selectbox(
@@ -154,18 +140,18 @@ preset_query = st.selectbox(
 user_query = st.text_input("Type your question here:", value="" if preset_query == "Custom Question..." else preset_query)
 
 if st.button("Submit Query", type="primary"):
-    if not grok_api_key:
-        st.warning("⚠️ Please provide your xAI / Grok API key in the sidebar.")
+    if not groq_api_key:
+        st.warning("⚠️ Please enter your free Groq API Key in the sidebar.")
     elif not user_query.strip():
-        st.warning("⚠️ Please enter a question to ask.")
+        st.warning("⚠️ Please enter a question.")
     else:
         try:
-            with st.spinner("Processing document references via Grok API..."):
-                # Connect Grok model via xAI ChatOpenAI endpoint
+            with st.spinner("Processing document references via Groq API..."):
+                # Connect to GROQ API using OpenAI format (100% Free Endpoint)
                 llm = ChatOpenAI(
-                    model="grok-beta",
-                    api_key=grok_api_key,
-                    base_url="https://api.x.ai/v1",
+                    model="qwen/qwen3.6-27b",
+                    api_key=groq_api_key,
+                    base_url="https://api.groq.com/openai/v1",
                     temperature=temperature
                 )
                 
@@ -185,7 +171,7 @@ if st.button("Submit Query", type="primary"):
                         st.caption(doc.page_content)
                         st.divider()
         except Exception as err:
-            st.error(f"Error querying Grok API: {err}")
+            st.error(f"Error querying Groq API: {err}")
 
 st.markdown("---")
 st.caption("CyberlawsGPT is an automated information system for PECA 2016 and does not constitute official legal advice.")
